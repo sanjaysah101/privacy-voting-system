@@ -1,12 +1,12 @@
+// Current network
+export const CURRENT_NETWORK = 'testnet' as const;
+
 // Contract addresses for different networks
 export const CONTRACT_ADDRESSES = {
-  testnet: {
-    poll: '', // Will be filled after deployment
+  [CURRENT_NETWORK]: {
+    poll: '0x0123...' as `0x${string}`, // Replace with your actual contract address
   },
-  mainnet: {
-    poll: '', // Will be filled after mainnet deployment
-  },
-} as const;
+};
 
 // Network configuration
 export const NETWORKS = {
@@ -21,6 +21,3 @@ export const NETWORKS = {
     baseUrl: 'https://alpha-mainnet.starknet.io',
   },
 } as const;
-
-// Current network
-export const CURRENT_NETWORK = 'testnet' as const;

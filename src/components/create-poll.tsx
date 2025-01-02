@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from '@starknet-react/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, MinusCircle } from 'lucide-react';
 import { useCreatePoll } from '@/hooks/use-create-poll';
-import { usePollContract } from '@/hooks/use-poll-contract';
 
 export function CreatePoll() {
   const { address } = useAccount();
-  const { contract } = usePollContract();
   const { createPoll, isSubmitting } = useCreatePoll();
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +18,13 @@ export function CreatePoll() {
   const [options, setOptions] = useState(['', '']);
   const [isPrivate, setIsPrivate] = useState(true);
   const [endDate, setEndDate] = useState('');
+  const [minDateTimeString, setMinDateTimeString] = useState('');
+
+  useEffect(() => {
+    const minDateTime = new Date();
+    minDateTime.setHours(minDateTime.getHours() + 1);
+    setMinDateTimeString(minDateTime.toISOString().slice(0, 16));
+  }, []);
 
   const addOption = () => {
     if (options.length < 5) {
@@ -73,14 +78,13 @@ export function CreatePoll() {
       return;
     }
 
-    if (!contract || !address) {
+    if (!address) {
       setError('Please connect your wallet first');
       return;
     }
 
     try {
       const success = await createPoll(question, options, endDate, isPrivate);
-
       if (success) {
         // Reset form
         setQuestion('');
@@ -94,11 +98,6 @@ export function CreatePoll() {
     }
   };
 
-  // Calculate minimum date-time for the end date (current time + 1 hour)
-  const minDateTime = new Date();
-  minDateTime.setHours(minDateTime.getHours() + 1);
-  const minDateTimeString = minDateTime.toISOString().slice(0, 16);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
@@ -111,6 +110,7 @@ export function CreatePoll() {
           required
           maxLength={31}
           className="bg-background text-foreground"
+          suppressHydrationWarning
         />
         <p className="text-sm text-muted-foreground">
           {question.length}/31 characters
@@ -129,6 +129,7 @@ export function CreatePoll() {
                 required
                 maxLength={31}
                 className="bg-background text-foreground"
+                suppressHydrationWarning
               />
               <p className="text-sm text-muted-foreground">
                 {option.length}/31 characters
@@ -185,6 +186,7 @@ export function CreatePoll() {
         type="submit"
         className="w-full"
         disabled={!address || isSubmitting || !validateForm()}
+        suppressHydrationWarning
       >
         {isSubmitting ? 'Creating...' : 'Create Poll'}
       </Button>
