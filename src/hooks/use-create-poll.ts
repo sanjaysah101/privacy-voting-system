@@ -53,34 +53,62 @@ export function useCreatePoll() {
     try {
       setIsSubmitting(true);
 
-      const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
+      const endTimestamp = BigInt(
+        Math.floor(new Date(endDate).getTime() / 1000)
+      );
 
       // Convert strings to felt252
-      const questionFelt = stringToFelt252(question);
-      const optionsFelt = stringsToFelt252Array(options);
+      try {
+        const questionFelt = stringToFelt252(question);
+        const optionsFelt = stringsToFelt252Array(options);
 
-      // Call contract
-      const tx = await contract.invoke('create_poll', [
-        questionFelt,
-        optionsFelt,
-        endTimestamp,
-        isPrivate ? 1 : 0,
-      ]);
+        // Call contract
+        const result = await contract.functions.create_poll(
+          questionFelt,
+          optionsFelt,
+          endTimestamp,
+          isPrivate ? BigInt(1) : BigInt(0)
+        );
 
-      await tx.wait();
+        if (!result.transaction_hash) {
+          throw new Error('Transaction failed - no transaction hash received');
+        }
 
-      toast({
-        title: 'Success',
-        description: 'Poll created successfully',
-      });
+        toast({
+          title: 'Success',
+          description: `Poll creation submitted (tx: ${result.transaction_hash.slice(
+            0,
+            8
+          )}...)`,
+        });
 
-      return true;
-    } catch (error: any) {
+        return true;
+      } catch (error) {
+        throw new Error(
+          `Invalid input: Text must be 31 characters or less and contain only ASCII characters ${error}`
+        );
+      }
+    } catch (error) {
       console.error('Error creating poll:', error);
+      let errorMessage = 'Failed to create poll. Please try again.';
+
+      if (error instanceof Error) {
+        const errorStr = error.message.toLowerCase();
+        if (errorStr.includes('insufficient') || errorStr.includes('balance')) {
+          errorMessage = 'Insufficient funds. Please add funds to your wallet.';
+        } else if (errorStr.includes('gas')) {
+          errorMessage = 'Not enough gas. Please add funds to your wallet.';
+        } else if (
+          errorStr.includes('validate') ||
+          errorStr.includes('invalid input')
+        ) {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
         title: 'Error',
-        description:
-          error.message || 'Failed to create poll. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
       return false;

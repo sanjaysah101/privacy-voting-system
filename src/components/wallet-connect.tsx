@@ -3,13 +3,19 @@
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
 import { Button } from '@/components/ui/button';
 import { Wallet } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function WalletConnect() {
   const { address } = useAccount();
-  const { connect, error: connectError, connectors } = useConnect({});
-  const { disconnect, error: disconnectError } = useDisconnect({});
+  const { connect, error: connectError, connectors } = useConnect();
+  const { disconnect, error: disconnectError } = useDisconnect();
+  const [availableConnectors, setAvailableConnectors] = useState<
+    typeof connectors
+  >([]);
 
-  console.log(connectors);
+  useEffect(() => {
+    setAvailableConnectors(connectors.filter((c) => c.available()));
+  }, [connectors]);
 
   if (address) {
     return (
@@ -31,12 +37,11 @@ export function WalletConnect() {
     <div className="flex flex-col items-center space-y-4">
       <h3 className="text-xl font-semibold">Connect Your Wallet</h3>
       <div className="flex space-x-4">
-        {connectors.map((connector) => (
+        {availableConnectors.map((connector) => (
           <Button
             key={connector.id}
             onClick={() => connect({ connector })}
             variant="outline"
-            disabled={!connector.available()}
           >
             Connect{' '}
             {connector.id.charAt(0).toUpperCase() + connector.id.slice(1)}

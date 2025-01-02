@@ -1,5 +1,5 @@
 import { WalletConnect } from '@/components/wallet-connect';
-// import { CreatePoll } from '@/components/create-poll';
+import { CreatePoll } from '@/components/create-poll';
 // import { ActivePolls } from '@/components/active-polls';
 
 export default function Home() {
@@ -24,7 +24,7 @@ export default function Home() {
             <h2 className="text-2xl font-semibold mb-4 text-card-foreground">
               Create New Poll
             </h2>
-            {/* <CreatePoll /> */}
+            <CreatePoll />
           </section>
 
           <section className="bg-card rounded-lg p-6 shadow-xl">
